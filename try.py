@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 import time
 from roiExtraction import ROIExtractor
-import xmlrpc.client
+# import xmlrpc.client
 
 cap = cv2.VideoCapture(0)
-conn = xmlrpc.client.ServerProxy('http://192.168.1.5:8111')
+# conn = xmlrpc.client.ServerProxy('http://192.168.1.5:8111')
 
 
 while True:
