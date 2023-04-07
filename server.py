@@ -5,7 +5,7 @@ import base64
 class machine:
     def __init__(self, port) -> None:
         self.port = port
-        with SimpleXMLRPCServer(('192.168.137.128', self.port), requestHandler = SimpleXMLRPCRequestHandler) as server:
+        with SimpleXMLRPCServer(('192.168.1.5', self.port), requestHandler = SimpleXMLRPCRequestHandler) as server:
             print(f"Activated port {self.port}")
 
 
