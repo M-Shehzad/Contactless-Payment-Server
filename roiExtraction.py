@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 
 class ROIExtractor:
 
@@ -28,7 +29,7 @@ class ROIExtractor:
         # APPLYING WATERSHED ALGORITHM
         dist_transform = cv2.distanceTransform(grad, cv2.DIST_L2, 5)
 
-        ret, sure = cv2.threshold(dist_transform, 0.25*dist_transform.max(), 255, 0)
+        ret, sure = cv2.threshold(dist_transform, 0.50*dist_transform.max(), 255, 0)
 
         grad2 = cv2.morphologyEx(sure, cv2.MORPH_OPEN, kernal, iterations=3)
 
@@ -65,4 +66,9 @@ class ROIExtractor:
 
 if __name__ == '__main__':
     roi = ROIExtractor()
-    roi.extract(cv2.imread('samples/n/005_3.JPG',0))
+    # roi = roi.extract(cv2.imread('../../IITD Palmprint V1/Left Hand/001_1.JPG',0))
+    for images in os.listdir('../../IITD Palmprint V1/Right Hand/'):
+        roi_image = roi.extract(cv2.imread(f'../../IITD Palmprint V1/Right Hand/{images}',0))
+        cv2.imwrite(f'../../IITD Palmprint V1/ROI/Right/{images}', roi_image)
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
