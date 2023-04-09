@@ -58,7 +58,7 @@ class ROIExtractor:
 
         # make darker areas more darker
         img_cropped = cv2.addWeighted(img_cropped, 4, cv2.GaussianBlur(img_cropped, (0,0), 30), -4, 128)
-        img_cropped = cv2.resize(img_cropped, (350,350))
+        img_cropped = cv2.resize(img_cropped, (150,150))
         # cv2.imwrite('../ROI_cropped.jpg',img_cropped)
 
         return img_cropped
@@ -67,8 +67,8 @@ class ROIExtractor:
 if __name__ == '__main__':
     roi = ROIExtractor()
     # roi = roi.extract(cv2.imread('../../IITD Palmprint V1/Left Hand/001_1.JPG',0))
-    for images in os.listdir('../../IITD Palmprint V1/Right Hand/'):
-        roi_image = roi.extract(cv2.imread(f'../../IITD Palmprint V1/Right Hand/{images}',0))
-        cv2.imwrite(f'../../IITD Palmprint V1/ROI/Right/{images}', roi_image)
+    for images in os.listdir('../../IITD Palmprint V1/Left Hand/'):
+        roi_image = roi.extract(cv2.imread(f'../../IITD Palmprint V1/Left Hand/{images}',0))
+        cv2.imwrite(f'../../IITD Palmprint V1/ROI/Left/{images}', roi_image)
         # if cv2.waitKey(1) & 0xFF == ord('q'):
         #     break
