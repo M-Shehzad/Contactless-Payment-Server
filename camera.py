@@ -32,7 +32,7 @@ class Camera:
             # time.sleep(1)
 
             cv2.namedWindow("Hand Palm Detection", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("Hand Palm Detection", 250, 250)
+            cv2.resizeWindow("Hand Palm Detection", 300, 300)
             cv2.imshow('Hand Palm Detection', self.frame)
             cv2.imshow('Live feedback', gray)
 
