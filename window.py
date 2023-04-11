@@ -1,10 +1,17 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QStackedWidget, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QPixmap, QIcon, QImage
-from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtCore import pyqtSlot, QTimer, QThread
 
-from camera import Camera
+from camera import Camera, _Camera
 scan = -1
+
+
+import cv2
+from roiExtraction import ROIExtractor
+import time, threading
+from threading import Thread, Lock
+
 
 class LoginWindow(QWidget):
     def __init__(self, stacked_widget):
@@ -103,12 +110,13 @@ class HomePage(QWidget):
         v_layout.addWidget(welcome_label)
         v_layout.addSpacing(10)
         v_layout.addWidget(process_label)
-        v_layout.addSpacing(20)
+        v_layout.addSpacing(30)
 
         h_layout = QHBoxLayout()
         h_layout.addWidget(register_button)
         h_layout.addSpacing(20)
         h_layout.addWidget(payment_button)
+        v_layout.addSpacing(20)
 
         v_layout.addLayout(h_layout)
         self.setLayout(v_layout)
@@ -120,111 +128,179 @@ class HomePage(QWidget):
         self.stacked_widget.setCurrentIndex(2)
 
 
-# import cv2
-# from roiExtraction import ROIExtractor
-# import threading, time
+class ScanPage1(QWidget):
+    def __init__(self, stacked_widget):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+        
+        layout = QVBoxLayout()
 
-# class ScanPage(QWidget):
-#     def __init__(self, stacked_widget):
-#         super().__init__()
-#         self.cap = cv2.VideoCapture(0)
+        welcome_label = QLabel("Please place your palm on the camera")
+        welcome_label.setObjectName("headingLabel")
 
-#         self.stacked_widget = stacked_widget
+        self.ROI_video_label = QLabel(self)
+        # self.ROI_video_label.resize(300, 300)
 
-#         layout = QVBoxLayout()
+        self.live_video_label = QLabel(self)
+        # self.live_video_label.resize(300, 300)
 
-#         welcome_label = QLabel("Please place your palm on the camera")
-#         welcome_label.setObjectName("headingLabel")
+        button1 = QPushButton('Open Camera', self)
+        button1.clicked.connect(self.get_frame)
 
-#         self.ROI_video_label = QLabel(self)
-#         self.ROI_video_label.resize(200, 200)
+        button2 = QPushButton('Take Picture',self)
+        button2.clicked.connect(self.get_roi)
 
-#         self.live_video_label = QLabel(self)
-#         self.live_video_label.resize(200, 200)
+        layout.addWidget(welcome_label)
+        layout.addSpacing(20)
+        h1_layout = QHBoxLayout()
+        h1_layout.addWidget(button1)
+        layout.addSpacing(20)
+        h1_layout.addWidget(button2)
+        layout.addSpacing(20)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(self.ROI_video_label)
+        h_layout.addSpacing(20)
+        h_layout.addWidget(self.live_video_label)
 
-#         button1 = QPushButton('Open Camera', self)
-#         button1.clicked.connect(self.get_frame)
-
-#         button2 = QPushButton('Take Picture',self)
-#         button2.clicked.connect(self.get_roi)
-
-#         layout.addWidget(welcome_label)
-#         layout.addSpacing(20)
-#         h1_layout = QHBoxLayout()
-#         h1_layout.addWidget(button1)
-#         layout.addSpacing(20)
-#         h1_layout.addWidget(button2)
-#         layout.addSpacing(20)
-#         h_layout = QHBoxLayout()
-#         h_layout.addWidget(self.ROI_video_label)
-#         h_layout.addSpacing(20)
-#         h_layout.addWidget(self.live_video_label)
-
-#         layout.addLayout(h1_layout)
-#         layout.addLayout(h_layout)
-#         self.setLayout(layout)
-#         layout.setContentsMargins(100,100,100,100)
-
-#     # def show_roi(self):
-#     #     pixmap = QPixmap('ROI.jpg')
-#     #     # Create QLabel object and set the pixmap as its content
-#     #     lbl = QLabel(self)
-#     #     lbl.setPixmap(pixmap)
-#     #     lbl.setGeometry(50, 200, pixmap.width(), pixmap.height())
-
-#     #     lbl.update()
-#     #     self.update()
-#     #     # print("Image Updated")
+        layout.addLayout(h1_layout)
+        layout.addLayout(h_layout)
+        self.setLayout(layout)
+        layout.setContentsMargins(100,100,100,100)
     
-#     # def get_frame(self):
-#     #     self.timer = QTimer()
-#     #     self.timer.timeout.connect(self.display_frame)
-#     #     self.timer.start(30)
+    @pyqtSlot()
+    def get_frame(self):
+        # self.cam = Camera()
+        # self.cam.get_frame()
+        try:
+            self.camera_thread = QThread()
+            self.camera = _Camera()
 
-#     def get_frame(self):
-#         while True:
-#             # t1 = threading.Thread()
-#             # t1.start()
-#             ret, frame = self.cap.read()
+            self.camera.moveToThread(self.camera_thread)
+            self.camera.frame_processed.connect(self.display_frame)
+            self.camera_thread.started.connect(self.camera.start_camera)
+            self.camera_thread.start()
+        except Exception as e:
+            print(e)
 
-#             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#             self.frame = ROIExtractor().extract(gray)
+    @pyqtSlot(QImage, QImage)
+    def display_frame(self, roi, live):
+        try:
+            # print('main',threading.currentThread())
+            pixmap2 = QPixmap.fromImage(live)
+            self.live_video_label.setPixmap(pixmap2)
+            pixmap1 = QPixmap.fromImage(roi)
+            self.ROI_video_label.setPixmap(pixmap1)
+        except Exception as e:
+            print(e)
 
-#             roi = QImage(self.frame.data, self.frame.shape[1], self.frame.shape[0], QImage.Format_RGB888)
-#             roi = roi.rgbSwapped()
-#             live = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
-#             live = live.rgbSwapped()
+    @pyqtSlot()
+    def get_roi(self):
+        try:
+            # status = self.cam.get_roi()
+            status = self.camera.get_roi()
+            print(f"Image saved - {status}")
+            
+            # self.camera_thread.stop()
+            if scan == 0:
+                self.stacked_widget.setCurrentIndex(3)
+            elif scan == 1:
+                self.stacked_widget.setCurrentIndex(4)
+        except Exception as ex:
+            print(ex)
 
-#             # t1.join()
-#             pixmap2 = QPixmap.fromImage(live)
-#             self.live_video_label.setPixmap(pixmap2)
-#             pixmap1 = QPixmap.fromImage(roi)
-#             self.ROI_video_label.setPixmap(pixmap1)
-#             time.sleep(0.03)
+class ScanPage(QWidget):
+    def __init__(self, stacked_widget):
+        super().__init__()
+        self.cap = cv2.VideoCapture(0)
 
-#             # cv2.namedWindow("Hand Palm Detection", cv2.WINDOW_NORMAL)
-#             # cv2.resizeWindow("Hand Palm Detection", 300, 300)
-#             # cv2.imshow('Hand Palm Detection', self.frame)
-#             # cv2.imshow('Live feedback', gray)
+        self.stacked_widget = stacked_widget
 
-#     def get_live(self):
-#         _, frame = self.cap.read()
-#         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#         return frame
+        layout = QVBoxLayout()
 
-#     def get_roi(self):
-#         status = cv2.imwrite("ROI.jpg", self.frame)
-#         print(f"Image saved - {status}")
-#         self.cap.release()
-#         cv2.destroyAllWindows()
-#         # self.show_roi()
+        welcome_label = QLabel("Please place your palm on the camera")
+        welcome_label.setObjectName("headingLabel")
 
-#     def __del__(self):
-#         self.cap.release()
+        self.ROI_video_label = QLabel(self)
+        self.ROI_video_label.resize(200, 200)
 
-#     # def closeEvent(self, event):
-#     #     self.capture.release()
-#     #     event.accept()
+        self.live_video_label = QLabel(self)
+        self.live_video_label.resize(200, 200)
+
+        button1 = QPushButton('Open Camera', self)
+        button1.clicked.connect(self.get_frame)
+
+        button2 = QPushButton('Take Picture',self)
+        button2.clicked.connect(self.get_roi)
+
+        layout.addWidget(welcome_label)
+        layout.addSpacing(20)
+        h1_layout = QHBoxLayout()
+        h1_layout.addWidget(button1)
+        layout.addSpacing(20)
+        h1_layout.addWidget(button2)
+        layout.addSpacing(20)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(self.ROI_video_label)
+        h_layout.addSpacing(20)
+        h_layout.addWidget(self.live_video_label)
+
+        layout.addLayout(h1_layout)
+        layout.addLayout(h_layout)
+        self.setLayout(layout)
+        layout.setContentsMargins(100,100,100,100)
+
+        self.t1 = Thread(target=self.display_frame)
+    
+    def get_frame(self):
+        # self.timer = QTimer()
+        # self.timer.timeout.connect(self.display_frame)
+        # self.timer.start(30)
+        self.t1.start()
+        self.lock = Lock()
+
+    def display_frame(self):
+        while True:
+            ret, frame = self.cap.read()
+
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            self.frame = ROIExtractor().extract(gray)
+
+            roi = QImage(self.frame.data, self.frame.shape[1], self.frame.shape[0], QImage.Format_RGB888)
+            roi = roi.rgbSwapped()
+            live = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+            live = live.rgbSwapped()
+
+            self.lock.acquire()
+            pixmap2 = QPixmap.fromImage(live)
+            self.live_video_label.setPixmap(pixmap2)
+            pixmap1 = QPixmap.fromImage(roi)
+            self.ROI_video_label.setPixmap(pixmap1)
+            self.lock.release()
+            time.sleep(0.03)
+
+            # cv2.namedWindow("Hand Palm Detection", cv2.WINDOW_NORMAL)
+            # cv2.resizeWindow("Hand Palm Detection", 300, 300)
+            # cv2.imshow('Hand Palm Detection', self.frame)
+            # cv2.imshow('Live feedback', gray)
+
+    def get_live(self):
+        _, frame = self.cap.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
+
+    def get_roi(self):
+        status = cv2.imwrite("ROI.jpg", self.frame)
+        print(f"Image saved - {status}")
+        self.cap.release()
+        cv2.destroyAllWindows()
+        # self.show_roi()
+
+    def __del__(self):
+        self.cap.release()
+
+    # def closeEvent(self, event):
+    #     self.capture.release()
+    #     event.accept()
 
 
 class _ScanPage(QWidget):
@@ -321,7 +397,8 @@ class MainWindow(QMainWindow):
         login_page = LoginWindow(stacked_widget)
         home_page = HomePage(stacked_widget)
         # scan_page = ScanPage(stacked_widget)
-        scan_page = _ScanPage(stacked_widget)
+        scan_page = ScanPage1(stacked_widget)
+        # scan_page = _ScanPage(stacked_widget)
         register_page = RegisterPage(stacked_widget)
         match_page = MatchPage(stacked_widget)
         
