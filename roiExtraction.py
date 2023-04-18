@@ -8,7 +8,7 @@ class ROIExtractor:
         pass
 
     def extract(self, img_original):
-        # Load an color image in grayscale
+        # Load a color image in grayscale
         # img_original = cv2.imread('samples/n/009_1.JPG',0)
 
         # Applying Gaussian Blur
@@ -17,7 +17,6 @@ class ROIExtractor:
 
         # Thresholding the image
         _, th = cv2.threshold(blur,50,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
 
         # Applying Morphological operators for smoothing out the image
         kernal = np.ones((5,5), dtype=np.uint8)
@@ -30,6 +29,8 @@ class ROIExtractor:
         dist_transform = cv2.distanceTransform(grad, cv2.DIST_L2, 5)
 
         ret, sure = cv2.threshold(dist_transform, 0.50*dist_transform.max(), 255, 0)
+        # perc = cv2.countNonZero(sure) / (dist_transform.shape[0] * dist_transform.shape[1]) * 100
+        # print(perc)
 
         grad2 = cv2.morphologyEx(sure, cv2.MORPH_OPEN, kernal, iterations=3)
 
@@ -58,8 +59,10 @@ class ROIExtractor:
 
         # make darker areas more darker
         img_cropped = cv2.addWeighted(img_cropped, 4, cv2.GaussianBlur(img_cropped, (0,0), 30), -4, 128)
-        img_cropped = cv2.resize(img_cropped, (150,150))
+        img_cropped = cv2.resize(img_cropped, (300,300))
         # cv2.imwrite('../ROI_cropped.jpg',img_cropped)
+        # if(perc >= 7):
+        #     cv2.imwrite('./images/' + str(perc) + '.jpg',img_cropped)
 
         return img_cropped
 

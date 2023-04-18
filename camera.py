@@ -52,6 +52,7 @@ class Camera:
         return frame
     
     def get_roi(self):
+        self.cap.release()
         return cv2.imwrite("ROI.jpg", self.frame)
 
     def __del__(self):
@@ -82,7 +83,7 @@ class _Camera(QObject):
 
                 self.frame_processed.emit(roi, live)
                 # print('worker',threading.currentThread())
-                time.sleep(0.02)
+                time.sleep(0.03)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
