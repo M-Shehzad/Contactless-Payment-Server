@@ -18,7 +18,7 @@ def create_payment_link(amount, description, customer_name, customer_email, cust
             "contact": customer_contact
         },
         "notify": {
-            "sms": False,
+            "sms": True,
             "email": False,
             "whatsapp": True,
         },
@@ -43,12 +43,12 @@ def get_all_payment_links():
     return client.payment_link.all()
 
 if __name__ == '__main__':
-    # payment_link = create_payment_link(100, "Test", "Pravin Kumar", "justpk88@gmail.com", "+919108139960")
-    # print(payment_link)
+    payment_link = create_payment_link(100, "Test", "Pravin Kumar", "justpk88@gmail.com", "+918618782292")
+    print(payment_link)
 
     # print(fetch_payment("pay_LaoQg8mqXZgUsI"))
     # client.payment_link.notifyBy("pay_LaoQg8mqXZgUsI", "email")
-    print(get_all_payment_links())
+    # print(get_all_payment_links())
 
 
 
