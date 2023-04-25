@@ -11,7 +11,7 @@ from PyQt5.QtGui import QPixmap, QIcon, QImage
 from PyQt5.QtCore import pyqtSlot, QTimer, QThread, Qt
 
 from camera import _Camera
-import serverConnect
+from serverConnect import *
 scan = -1
 
 class LoginWindow(QWidget):
@@ -341,7 +341,7 @@ class RegisterPage(QWidget):
         layout.setContentsMargins(100, 0, 100, 100)
 
     def showEvent(self, a0) -> None:
-        serverStuff = serverConnect.connect()
+        serverStuff = registerPalm()
 
         palmId = serverStuff['uniqueId']
         buf = BytesIO()
