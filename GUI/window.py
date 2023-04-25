@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap, QIcon, QImage
 from PyQt5.QtCore import pyqtSlot, QTimer, QThread, Qt
 
-from camera import Camera, _Camera
+from camera import _Camera
+from serverConnect import *
 scan = -1
 
 class LoginWindow(QWidget):
@@ -330,7 +331,19 @@ class RegisterPage(QWidget):
         welcome_label = QLabel("Please Scan the QR and register with our mobile application")
         welcome_label.setObjectName("headingLabel")
 
-        palmId = datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
+        self.QR_label = QLabel(self)
+
+        layout.addWidget(menu_bar)
+        layout.addWidget(welcome_label)
+        layout.addSpacing(20)
+        layout.addWidget(self.QR_label)
+        self.setLayout(layout)
+        layout.setContentsMargins(100, 0, 100, 100)
+
+    def showEvent(self, a0) -> None:
+        serverStuff = registerPalm()
+
+        palmId = serverStuff['uniqueId']
         buf = BytesIO()
         img = qrcode.make(f"""
             palmId:{palmId}
@@ -339,16 +352,8 @@ class RegisterPage(QWidget):
         qr_pixmap = QPixmap()
         qr_pixmap.loadFromData(buf.getvalue(), "PNG")
 
-        self.QR_label = QLabel(self)
         self.QR_label.setPixmap(qr_pixmap)
         self.QR_label.setAlignment(Qt.AlignCenter)
-
-        layout.addWidget(menu_bar)
-        layout.addWidget(welcome_label)
-        layout.addSpacing(20)
-        layout.addWidget(self.QR_label)
-        self.setLayout(layout)
-        layout.setContentsMargins(100, 0, 100, 100)
 
     def go_home(self):
         self.stacked_widget.setCurrentIndex(1)
