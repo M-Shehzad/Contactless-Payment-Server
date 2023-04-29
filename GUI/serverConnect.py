@@ -38,7 +38,7 @@ def checkPalm():
 
 	amount = db.collection('users').document(uniqueId).get().to_dict()['wallet']
 	db.collection('users').document(uniqueId).update({'wallet': amount-100})
-	db.collection('users').document(uniqueId).collection("transactions").add({'amount': 100, 'timestamp': firestore.SERVER_TIMESTAMP, 'type': 'debit'})
+	db.collection('users').document(uniqueId).collection("transactions").add({'amount': 100, 'time_stamp': firestore.SERVER_TIMESTAMP, 'type': 'debit'})
 
 
 if __name__ == '__main__':
