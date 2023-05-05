@@ -83,9 +83,9 @@ class _Camera(QObject):
 
                 self.frame_processed.emit(roi, live)
                 # print('worker',threading.currentThread())
-                time.sleep(0.03)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                # time.sleep(0.03)
+                # if cv2.waitKey(1) & 0xFF == ord('q'):
+                #     break
 
         except Exception as ex:
             print(ex)
